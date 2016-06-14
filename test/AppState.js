@@ -12,13 +12,6 @@ const schema = {
       hasMany: {
         posts: { store: 'posts', key: 'id', get: store => store.filterByHubId }
       }
-    },
-    collectionKey: 'collection',
-    belongsTo: {
-      user: { store: 'users', key: 'id', get: store => store.getById }
-    },
-    hasMany: {
-      posts: { store: 'posts', key: 'id', get: store => store.filterByHubId }
     }
   },
   posts: {
@@ -28,15 +21,6 @@ const schema = {
         user: { store: 'users', key: 'id', get: store => store.getById },
         hub: { store: 'hubs', key: 'id', get: store => store.getById }
       }
-    },
-    collectionKey: 'collection',
-    belongsTo: {
-      user: { store: 'users', key: 'id', get: store => store.getById },
-      hub: { store: 'hubs', key: 'id', get: store => store.getById }
-    },
-    asNestedTree: {
-      children: null,
-      contributions: null
     }
   },
   users: {
@@ -46,11 +30,6 @@ const schema = {
         posts: { store: 'posts', key: 'id', get: store => store.filterByUserId },
         hubs: { store: 'hubs', key: 'id', get: store => store.filterByUserId }
       }
-    },
-    collectionKey: 'collection',
-    hasMany: {
-      posts: { store: 'posts', key: 'id', get: store => store.filterByUserId },
-      hubs: { store: 'hubs', key: 'id', get: store => store.filterByUserId }
     }
   }
 }
