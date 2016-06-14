@@ -46,26 +46,26 @@ describe('AppStore', () => {
 
   })
 
-  it('should properly maintain relationships on nested data structures', () => {
-    appState.fromJS(initialState)
+  // it('should properly maintain relationships on nested data structures', () => {
+  //   appState.fromJS(initialState)
+  //
+  //   const hub = appState.stores.hubs.collection[0]
+  //   assert.equal(hub.posts[1].contributions[0].constructor.name, "Contribution")
+  //   assert.equal(hub.posts[1].contributions[0].user.firstName, "Peter")
+  // })
 
-    const hub = appState.stores.hubs.collection[0]
-    assert.equal(hub.posts[1].contributions[0].constructor.name, "Contribution")
-    assert.equal(hub.posts[1].contributions[0].user.firstName, "Peter")
-  })
-
-  it('should add an item and maintain relationships', () => {
-    appState.fromJS(initialState)
-
-    appState.stores.hubs.add({ id: 621, type: 'hub', name: 'Fashion Week', user: { id: 789 } })
-    const collection = appState.stores.hubs.collection
-    const hub = collection[collection.length - 1]
-    const user = appState.stores.users.getById(789)
-
-    assert.equal(hub.constructor.name, 'Hub')
-    assert.equal(hub.user, user)
-    assert.equal(user.hubs[user.hubs.length - 1], hub)
-  })
+  // it('should add an item and maintain relationships', () => {
+  //   appState.fromJS(initialState)
+  //
+  //   appState.stores.hubs.add({ id: 621, type: 'hub', name: 'Fashion Week', user: { id: 789 } })
+  //   const collection = appState.stores.hubs.collection
+  //   const hub = collection[collection.length - 1]
+  //   const user = appState.stores.users.getById(789)
+  //
+  //   assert.equal(hub.constructor.name, 'Hub')
+  //   assert.equal(hub.user, user)
+  //   assert.equal(user.hubs[user.hubs.length - 1], hub)
+  // })
 
   // it('should asynchronously load multiple items and maintain relationships across all items', (done) => {
   //   appState.fromJS(initialState)

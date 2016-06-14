@@ -8,66 +8,64 @@ export const referenceManager = (stores, schema) => {
 
   const buildReferences = (storeKey) => {
     return (stateStart = null) => {
-      const { collectionKey, belongsTo, hasMany, hasOne, asNestedTree } = schema[storeKey]
       const store = stores[storeKey]
+      const storeSchema = schema[storeKey]
 
-      const collection = store[collectionKey]
+      Object.keys(storeSchema).forEach((schemaKey) => {
+        const schemaItem = storeSchema[schemaKey]
+        const { belongsTo, hasMany, hasOne } = schemaItem
 
-      if (collection) {
-        collection.forEach((item) => {
-          item.$refs = schema[storeKey]
+        if (schemaItem.type === Array) {
+          const collection = store[schemaKey]
 
-          if (belongsTo) {
-            Object.keys(belongsTo).forEach((refKey) => {
-              const options = belongsTo[refKey]
-              const refSchema = schema[options.store]
-              const refStore = stores[options.store]
-              const refCollection = refStore[refSchema.collectionKey]
-              const refItem = refCollection.find((refItem) => refItem[options.key] === item[refKey][options.key])
+          if (collection) {
+            collection.forEach((item) => {
+              item.$refs = schemaItem
 
-              if (refItem) {
-                item[refKey] = refItem
-              } else {
-                Object
-                waitForReference(item, refKey, item[refKey][options.key])
+              if (belongsTo) {
+                Object.keys(belongsTo).forEach((refKey) => {
+                  const options = belongsTo[refKey]
+                  const refSchema = schema[options.store]
+                  const refStore = stores[options.store]
+                  const refItem = options.get(refStore).bind(refStore)(item[refKey].id)
+
+                  if (refItem) {
+                    item[refKey] = refItem
+                  } else {
+                    //waitForReference(item, refKey, item[refKey][options.key])
+                  }
+                })
+              }
+
+              if (hasMany) {
+                Object.keys(hasMany).forEach((refKey) => {
+                  const options = hasMany[refKey]
+                  const refSchema = schema[options.store]
+                  const refStore = stores[options.store]
+
+                  if (typeof options.get === 'function') {
+                    item[refKey] = options.get(refStore).bind(refStore)(item.id)
+                  }
+                })
+              }
+
+              if (hasOne) {
+                Object.keys(hasOne).forEach((refKey) => {
+                  const options = hasOne[refKey]
+                  const refSchema = schema[options.store]
+                  const refStore = stores[options.store]
+
+                  if (typeof options.get === 'function') {
+                    item[refKey] = options.get(refStore).bind(refStore)(item.id)
+                  }
+                })
               }
             })
           }
-
-          if (hasMany) {
-            Object.keys(hasMany).forEach((refKey) => {
-              const options = hasMany[refKey]
-              const refSchema = schema[options.store]
-              const refStore = stores[options.store]
-
-              if (typeof options.get === 'function') {
-                item[refKey] = options.get(refStore).bind(refStore)(item.id)
-              }
-            })
-          }
-
-          if (hasOne) {
-            Object.keys(hasOne).forEach((refKey) => {
-              const options = hasOne[refKey]
-              const refSchema = schema[options.store]
-              const refStore = stores[options.store]
-
-              if (typeof options.get === 'function') {
-                item[refKey] = options.get(refStore).bind(refStore)(item.id)
-              }
-            })
-          }
-
-          if (asNestedTree) {
-            Object.keys(asNestedTree).forEach((refKey) => {
-              const options = asNestedTree[refKey] || {}
-
-              if (item[refKey]) {
-              }
-            })
-          }
-        })
-      }
+        } else {
+          console.log("Have not implemented this yet! Only supports collections of models")
+        }
+      })
     }
   }
 
