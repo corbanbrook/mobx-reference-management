@@ -15,16 +15,22 @@ export class HubsStore {
   @observable collection = []
   @observable current = null
 
-  load(state) {
+  @action load(state) {
     Object.assign(this, {
       ...state,
       collection: state.collection.map((item) => new this.constructor.model(item))
     })
   }
 
-  add(item) {
+  @action add(item) {
     this.collection.push(new this.constructor.model(item))
-    this.$buildReferences(this.collection[this.collection.length - 1])
+    this.$buildReferences()
+  }
+
+  fetch(item) {
+    setTimeout(() => {
+      this.add(item)
+    }, 500)
   }
 
   getById(id) {

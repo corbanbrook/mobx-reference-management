@@ -1,6 +1,10 @@
-import { observable, toJS } from 'mobx'
+import { observable, toJS, action, useStrict } from 'mobx'
 import { referenceManager, serialize, deserialize } from '../src'
 import { HubsStore, UsersStore, PostsStore } from './stores'
+
+useStrict(true)
+
+// import { list, map, child, ref }
 
 const schema = {
   hubs: {
@@ -10,7 +14,7 @@ const schema = {
         user: { store: 'users', key: 'id', get: store => store.getById }
       },
       hasMany: {
-        posts: { store: 'posts', key: 'id', get: store => store.filterByHubId }
+        posts: { store: 'posts', collection: 'collection', key: 'id', get: store => store.filterByHubId }
       }
     }
   },
@@ -27,15 +31,15 @@ const schema = {
     collection: {
       type: Array,
       hasMany: {
-        posts: { store: 'posts', key: 'id', get: store => store.filterByUserId },
-        hubs: { store: 'hubs', key: 'id', get: store => store.filterByUserId }
+        posts: { store: 'posts', collection: 'collection', key: 'id', get: store => store.filterByUserId },
+        hubs: { store: 'hubs', collection: 'collection', key: 'id', get: store => store.filterByUserId }
       }
     }
   }
 }
 
 export class AppState {
-  @observable stores = {}
+  stores = {}
 
   constructor(stores) {
     this.stores = referenceManager(stores, schema)

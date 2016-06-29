@@ -3,73 +3,89 @@ import { autorun, transaction } from 'mobx'
 export const referenceManager = (stores, schema) => {
   let waitingReferences = []
   const waitForReference = (item, refKey, key) => {
-    console.log("Waiting for reference")
+    waitingReferences.push({item, refKey, key})
   }
 
-  const buildReferences = (storeKey) => {
-    return (stateStart = null) => {
-      const store = stores[storeKey]
-      const storeSchema = schema[storeKey]
+  // const connectRef = (refKey, value) => {
+  //   let connected = []
+  //   waitingReferences.forEach((wait, idx) => {
+  //     if (wait.refKey == refKey && wait.key == value.key) {
+  //       wait.item.buildRefs()
+  //       connected.push(idx)
+  //     }
+  //   })
+  //   connected.forEach((idx) => {
+  //     waitingRefs.splice(idx, 1)
+  //   })
+  // }
 
-      Object.keys(storeSchema).forEach((schemaKey) => {
-        const schemaItem = storeSchema[schemaKey]
-        const { belongsTo, hasMany, hasOne } = schemaItem
+  const buildStoreReferences = (storeKey) => {
+    const store = stores[storeKey]
+    const storeSchema = schema[storeKey]
 
-        if (schemaItem.type === Array) {
-          const collection = store[schemaKey]
+    Object.keys(storeSchema).forEach((schemaKey) => {
+      const schemaItem = storeSchema[schemaKey]
+      const { belongsTo, hasMany, hasOne } = schemaItem
 
-          if (collection) {
-            collection.forEach((item) => {
-              item.$refs = schemaItem
+      if (schemaItem.type === Array) {
+        const collection = store[schemaKey]
 
-              if (belongsTo) {
-                Object.keys(belongsTo).forEach((refKey) => {
-                  const options = belongsTo[refKey]
-                  const refSchema = schema[options.store]
-                  const refStore = stores[options.store]
-                  const refItem = options.get(refStore).bind(refStore)(item[refKey].id)
+        if (collection) {
+          collection.forEach((item) => {
+            item.$refs = schemaItem
 
-                  if (refItem) {
-                    item[refKey] = refItem
-                  } else {
-                    //waitForReference(item, refKey, item[refKey][options.key])
-                  }
-                })
-              }
+            if (belongsTo) {
+              Object.keys(belongsTo).forEach((refKey) => {
+                const options = belongsTo[refKey]
+                const refStore = stores[options.store]
+                const refItem = options.get(refStore).bind(refStore)(item[refKey].id)
 
-              if (hasMany) {
-                Object.keys(hasMany).forEach((refKey) => {
-                  const options = hasMany[refKey]
-                  const refSchema = schema[options.store]
-                  const refStore = stores[options.store]
+                if (refItem) {
+                  item[refKey] = refItem
+                } else {
+                  waitForReference(item, refKey, item[refKey][options.key])
+                }
+              })
+            }
 
-                  if (typeof options.get === 'function') {
-                    item[refKey] = options.get(refStore).bind(refStore)(item.id)
-                  }
-                })
-              }
+            if (hasMany) {
+              Object.keys(hasMany).forEach((refKey) => {
+                const options = hasMany[refKey]
+                const refStore = stores[options.store]
 
-              if (hasOne) {
-                Object.keys(hasOne).forEach((refKey) => {
-                  const options = hasOne[refKey]
-                  const refSchema = schema[options.store]
-                  const refStore = stores[options.store]
+                if (typeof options.get === 'function') {
+                  item[refKey] = options.get(refStore).bind(refStore)(item.id)
+                }
+              })
+            }
 
-                  if (typeof options.get === 'function') {
-                    item[refKey] = options.get(refStore).bind(refStore)(item.id)
-                  }
-                })
-              }
-            })
-          }
-        } else {
-          console.log("Have not implemented this yet! Only supports collections of models")
+            if (hasOne) {
+              Object.keys(hasOne).forEach((refKey) => {
+                const options = hasOne[refKey]
+                const refStore = stores[options.store]
+
+                if (typeof options.get === 'function') {
+                  item[refKey] = options.get(refStore).bind(refStore)(item.id)
+                }
+              })
+            }
+          })
         }
-      })
-    }
+      } else {
+        console.log("Have not implemented this yet! Only supports collections of models")
+      }
+    })
   }
 
-  Object.keys(stores).forEach(key => stores[key].$buildReferences = buildReferences(key))
+  // Set a reference to the resource on the model
+  Object.defineProperty(stores, '$buildReferences', {
+    enumerable: false,
+    value: () => {
+      Object.keys(stores).forEach(buildStoreReferences)
+    }
+  });
+
+  Object.keys(stores).forEach(storeKey => stores[storeKey].$buildReferences = stores.$buildReferences.bind(stores))
 
   return stores
 }
@@ -89,7 +105,7 @@ export const serialize = (obj) => {
         Object.keys(belongsTo).forEach((refKey) => {
           const options = belongsTo[refKey]
           if (result[refKey]) {
-            result[refKey] = {[options.key]: value[refKey][options.key]}
+            result[refKey] = {[options.key || 'id']: value[refKey][options.key || 'id']}
           }
         })
       }
@@ -138,6 +154,6 @@ export const deserialize = (stores, state, loadStateHandler) => {
     })
 
     // 2nd pass - Build references for deserialized data
-    Object.keys(stores).forEach((storeKey) => stores[storeKey].$buildReferences())
+    stores.$buildReferences()
   })
 }

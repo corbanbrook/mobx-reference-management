@@ -33,15 +33,22 @@ export class PostsStore {
   @observable collection = []
   @observable current = null
 
-  load(state) {
+  @action load(state) {
     Object.assign(this, {
       ...state,
       collection: state.collection.map((item) => new this.constructor.model(item))
     })
   }
 
-  add(item) {
+  @action add(item) {
     this.collection.push(new this.constructor.model(item))
+    this.$buildReferences()
+  }
+
+  fetch(item) {
+    setTimeout(() => {
+      this.add(item)
+    }, 500)
   }
 
   getById(id) {

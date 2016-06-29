@@ -54,42 +54,45 @@ describe('AppStore', () => {
   //   assert.equal(hub.posts[1].contributions[0].user.firstName, "Peter")
   // })
 
-  // it('should add an item and maintain relationships', () => {
-  //   appState.fromJS(initialState)
-  //
-  //   appState.stores.hubs.add({ id: 621, type: 'hub', name: 'Fashion Week', user: { id: 789 } })
-  //   const collection = appState.stores.hubs.collection
-  //   const hub = collection[collection.length - 1]
-  //   const user = appState.stores.users.getById(789)
-  //
-  //   assert.equal(hub.constructor.name, 'Hub')
-  //   assert.equal(hub.user, user)
-  //   assert.equal(user.hubs[user.hubs.length - 1], hub)
-  // })
+  it('should add an item and maintain relationships', () => {
+    appState.fromJS(initialState)
 
-  // it('should asynchronously load multiple items and maintain relationships across all items', (done) => {
-  //   appState.fromJS(initialState)
-  //
-  //   appState.stores.posts.fetch({ id: 1111, name: 'Post Async', user: { id: 3333 }, hub: { id: 2222 }})
-  //   appState.stores.hubs.fetch({ id: 2222, name: 'Hub Async', user: { id: 3333 }})
-  //   appState.stores.users.fetch({ id: 3333, firstName: 'Kyle', lastName: 'Davis'})
-  //
-  //   setTimeout(() => {
-  //     const post = appState.stores.posts.last
-  //     const hub = appState.stores.hubs.last
-  //     const user = appState.stores.users.last
-  //
-  //     // Belongs to
-  //     assert.equal(post.hub, hub)
-  //     assert.equal(post.user, user)
-  //     assert.equal(hub.user, user)
-  //
-  //     // Has many
-  //     assert.equal(hub.posts[0], post)
-  //     assert.equal(user.hubs[0], hub)
-  //     assert.equal(user.posts[0], post)
-  //
-  //     done()
-  //   }, 400)
-  // })
+    appState.stores.hubs.add({ id: 621, type: 'hub', name: 'Fashion Week', user: { id: 789 } })
+    const collection = appState.stores.hubs.collection
+    const hub = collection[collection.length - 1]
+    const user = appState.stores.users.getById(789)
+
+    assert.equal(hub.constructor.name, 'Hub')
+    assert.equal(hub.user, user)
+    assert.equal(user.hubs[user.hubs.length - 1], hub)
+  })
+
+  it('should asynchronously load multiple items and maintain relationships across all items', (done) => {
+    appState.fromJS(initialState)
+
+    appState.stores.posts.fetch({ id: 1111, name: 'Post Async', user: { id: 3333 }, hub: { id: 2222 }})
+    appState.stores.hubs.fetch({ id: 2222, name: 'Hub Async', user: { id: 3333 }})
+    appState.stores.users.fetch({ id: 3333, firstName: 'Kyle', lastName: 'Davis'})
+
+    setTimeout(() => {
+      const postsCollection = appState.stores.posts.collection
+      const hubsCollection = appState.stores.hubs.collection
+      const usersCollection = appState.stores.users.collection
+      const post = postsCollection[postsCollection.length - 1]
+      const hub = hubsCollection[hubsCollection.length - 1]
+      const user = usersCollection[usersCollection.length - 1]
+
+      // Belongs to
+      assert.equal(post.hub, hub)
+      assert.equal(post.user, user)
+      assert.equal(hub.user, user)
+
+      // Has many
+      assert.equal(hub.posts[0], post)
+      assert.equal(user.hubs[0], hub)
+      assert.equal(user.posts[0], post)
+
+      done()
+    }, 600)
+  })
 })
